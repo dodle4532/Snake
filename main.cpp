@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 #include <conio.h>
 #include <locale.h>
 #include <time.h>
@@ -45,7 +46,7 @@ enum class Dir {
     UP
 };
 
-Dir* Moves = new Dir [10000];
+Dir* Moves = new Dir [1000];
 int movesCount;
 
 vector <int> getLastTrail (int x, int y) {
@@ -91,23 +92,13 @@ vector <int> getLastTrail (int x, int y) {
     vector <int> lastTrail(2);
     lastTrail[0] = x;
     lastTrail[1] = y;
+    if (x == Fruit_x && y == Fruit_y) {
+        movesCount = 1;
+    }
     return lastTrail;
 }
 
 void changeTrail(){ 
-/*    if (direction == Dir::LEFT) {
-        firstTrailX = prevX;
-    }
-    if (direction == Dir::UP) {
-        firstTrailY = prevY;
-    }
-    if (direction == Dir::RIGHT) {
-        firstTrailX = prevX;
-    }
-    if (direction == Dir::DOWN) {
-        firstTrailY = prevY;
-    }
-*/
     firstTrailX = prevX;
     firstTrailY = prevY;
     Trail[firstTrailX][firstTrailY] = 1;
@@ -122,37 +113,6 @@ void changeTrail(){
     lastTrail = getLastTrail(x, y);
     lastTrailX = lastTrail[0];
     lastTrailY = lastTrail[1];
-/*    if (Trail[lastTrailX + 1][lastTrailY] == 1) {
-        if (getTrailsAround(lastTrailX, lastTrailY) ==
-            getTrailsAround(lastTrailX + 1, lastTrailY) + 1) {
-            
-            lastTrailX += 1;    
-        }
-        
-    } 
-    else if (Trail[lastTrailX - 1][lastTrailY] == 1) {
-        if (getTrailsAround(lastTrailX, lastTrailY) ==
-            getTrailsAround(lastTrailX + 1, lastTrailY) + 1) {
-        
-            lastTrailX -= 1;
-        }
-    }
-    else if (Trail[lastTrailX][lastTrailY + 1] == 1) {
-        if (getTrailsAround(lastTrailX, lastTrailY) ==
-            getTrailsAround(lastTrailX + 1, lastTrailY) + 1) {
-        
-            lastTrailY += 1;
-        }
-    }
-    else if (Trail[lastTrailX][lastTrailY - 1] == 1) {
-        if (getTrailsAround(lastTrailX, lastTrailY) ==
-            getTrailsAround(lastTrailX + 1, lastTrailY) + 1) {
-
-            lastTrailY -= 1;
-        }
-    }
-    */
-//    cout << lastTrailX << lastTrailY << endl;
     return;
 }
 
@@ -212,11 +172,6 @@ void Start () {
 
 void Move() {
     int keyBoard;
-/*    if (isTrail == Trail::FALSE) {
-        prevX = x;
-        prevY = y;
-    }
-*/
     prevX = x;
     prevY = y;
     switch (keyBoard = _getch()) {
@@ -253,21 +208,41 @@ void Move() {
                 changeTrail();
             }
             break;
-/*        case (int)Letters::Russian_s:
+        case 'û':
             y = y + 1;
+            Moves[movesCount] = Dir::DOWN;
+            movesCount++;
+            if (isTrail != Trail::FALSE) {
+                changeTrail();
+            }
             break;
-        case (int)Letters::Russian_a:
+        case 'ô':
             x = x - 1;
+            Moves[movesCount] = Dir::LEFT;
+            movesCount++;
+            if (isTrail != Trail::FALSE) {
+                changeTrail();
+            }
             break;
-        case (int)Letters::Russian_w:
+        case 'ö':
             y = y - 1;
+            Moves[movesCount] = Dir::UP;
+            movesCount++;
+            if (isTrail != Trail::FALSE) {
+                changeTrail();
+
+            }
             break;
-        case (int)Letters::Russian_d:
+        case 'â':
             x = x + 1;
+            Moves[movesCount] = Dir::RIGHT;
+            movesCount++;
+            if (isTrail != Trail::FALSE) {
+                changeTrail();
+            }
             break;        
         }
-        */
-    }
+        
 }
 
 void Logic() {
@@ -298,6 +273,9 @@ void Logic() {
         isFruitEaten = false;
     }
     if (Trail[x][y] == 1) {
+        gameOver = true;
+    }
+    if (movesCount > 999) {
         gameOver = true;
     }
 
