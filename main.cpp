@@ -2,31 +2,36 @@
 #include <conio.h>
 #include <time.h>
 #include <vector>
+#include <chrono>
 
 
 using namespace std;
 
-void delay(int j)
+bool delay(int j)
 {
     j=j*10000000;
     for (int i = 1; i < j; i++)
     {
-        
-    }  
+        if (_kbhit()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool gameOver;
 const int widht = 26;
 const int height = 20;
-char keyBoard;
+unsigned char keyBoard;
 int score;
 int x,y,Fruit_x,Fruit_y;
 bool isFruitEaten;
 
 enum class GameMode : int{
-    EASY = 0,
+    EASY = 49,
     MEDIUM,
-    HARD
+    HARD,
+    EXTREME
 };
 GameMode gamemode;
 
@@ -41,6 +46,7 @@ int firstTrailX, firstTrailY;
 int lastTrailX, lastTrailY;
 int Trail[widht][height];
 bool isBorderCrossed;
+bool flag;
 
 enum class Letters {
     a = 97,
@@ -60,7 +66,7 @@ enum class Dir {
     UP
 };
 
-Dir* Moves = new Dir [1000];
+Dir* Moves;
 int movesCount;
 
 bool isBorderCrossedX (int x) {
@@ -227,13 +233,20 @@ void Start () {
             Trail[i][j] = 0;
         }
     }
+    if (gamemode == GameMode::HARD 
+        || gamemode == GameMode::EXTREME) {
+        Moves = new Dir [10000];
+        return;
+    }
+    else {
+        Moves = new Dir[1000];
+    }
 }
 
-void Move() {
-    unsigned char keyBoard;
+void Move(unsigned char keyBoard) {
     prevX = x;
     prevY = y;
-    switch (keyBoard = _getch()) {
+    switch (keyBoard) {
         case (unsigned char)Letters::s:
             y = y + 1;
             Moves[movesCount] = Dir::DOWN;
@@ -300,7 +313,7 @@ void Move() {
                 changeTrail();
             }
             break;        
-        }
+    }
         
 }
 
@@ -369,12 +382,15 @@ void Logic() {
 }
 
 int main() {
-    cout << "Choose your gamemode(just type his number) and press ENTER" << endl;
+    cout << "Choose your gamemode(just type his number)" << endl;
     cout << "1. Easy" << endl;
     cout << "2. Medium" << endl;
+    cout << "3. Hard" << endl;
+    cout << "4. Extreme" << endl;
     int gm;
-    cin >> gm;
-    if (gm < 1 || gm > 2) {
+    gm = _getch();
+    if (gm < (static_cast<int>(GameMode::EASY)) ||
+        gm > (static_cast<int>(GameMode::EXTREME))) {
         delete [] Moves;
         cout << "ERROR" << endl;
         getchar();
@@ -382,36 +398,84 @@ int main() {
         return 0;
     }
     switch(gm) {
-        case 1: {
+        case static_cast<int>(GameMode::EASY): {
             gamemode = GameMode::EASY;
             break;
         }
-        case 2: {
+        case static_cast<int>(GameMode::MEDIUM): {
             gamemode = GameMode::MEDIUM;
             break;
         }
-/*        case 3: {
+        case static_cast<int>(GameMode::HARD): {
             gamemode = GameMode::HARD;
             break;
         }
-        */
+        case static_cast<int>(GameMode::EXTREME): {
+            gamemode = GameMode::EXTREME;
+            break;
+        }
+        
     }
     Start();
     while (!gameOver) {
-        if (_kbhit) {
-            if (gamemode == GameMode::HARD) {
-                x++;
-                delay(1);
+        if (gamemode == GameMode::EASY
+            || gamemode == GameMode::MEDIUM) {
+            if (_kbhit) {
+                DrawField();
+                keyBoard = _getch();
+                Move(keyBoard);
+                Logic();
+                if (score == 50) {
+                    cout << "You win!!!" << endl;
+                    getchar();
+                    getchar();
+                    return 0;
+                }
             }
+        }
+        else if (gamemode == GameMode::HARD) {
+            flag = false;
+            auto start = chrono::steady_clock::now();
             DrawField();
-            Move();
-            Logic();
-            if (score == 50) {
-                cout << "You win!!!" << endl;
-                getchar();
-                getchar();
-                return 0;
+            while (!_kbhit()) {
+                auto end = chrono::steady_clock::now();
+                if (chrono::duration_cast<chrono::milliseconds>(end - start).count() > 150) { 
+                    flag = true;
+                    break;
+                }
             }
+            if (flag == false) {
+                keyBoard = _getch();
+            }
+            else {
+                if (Moves[movesCount] == Dir::RIGHT) {
+                    keyBoard = 'd';
+                }
+            }
+            Move(keyBoard);
+            Logic();
+        }
+        else {
+            flag = false;
+            auto start = chrono::steady_clock::now();
+            DrawField();
+            while (!_kbhit()) {
+                auto end = chrono::steady_clock::now();
+                if (chrono::duration_cast<chrono::milliseconds>(end - start).count() > 70) { 
+                    flag = true;
+                    break;
+                }
+            }
+            if (flag == false) {
+                keyBoard = _getch();
+            }
+            else {
+                if (Moves[movesCount] == Dir::RIGHT) {
+                    keyBoard = 'd';
+                }
+            }
+            Move(keyBoard);
+            Logic();
         }
     }
     delete [] Moves;
