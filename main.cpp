@@ -1,5 +1,4 @@
 #include <iostream>
-#include <stdio.h>
 #include <conio.h>
 #include <locale.h>
 #include <time.h>
@@ -23,7 +22,6 @@ enum class Trail {
 };
 Trail isTrail;
 int prevX, prevY;
-int curTrailX, curTrailY;
 int firstTrailX, firstTrailY;
 int lastTrailX, lastTrailY;
 int Trail[widht][height];
@@ -33,10 +31,10 @@ enum class Letters {
     s = 115,
     d = 100,
     w = 119,
-    Russian_a = 10100000,
-    Russian_s = 11101011,
-    Russian_d = 10100010,
-    Russian_w = 11100110
+    Russian_a = 228,
+    Russian_s = 235,
+    Russian_d = 162,
+    Russian_w = 230
 };
 
 enum class Dir {
@@ -171,11 +169,11 @@ void Start () {
 }
 
 void Move() {
-    int keyBoard;
+    unsigned char keyBoard;
     prevX = x;
     prevY = y;
     switch (keyBoard = _getch()) {
-        case (int)Letters::s:
+        case (unsigned char)Letters::s:
             y = y + 1;
             Moves[movesCount] = Dir::DOWN;
             movesCount++;
@@ -183,7 +181,7 @@ void Move() {
                 changeTrail();
             }
             break;
-        case (int)Letters::a:
+        case (unsigned char)Letters::a:
             x = x - 1;
             Moves[movesCount] = Dir::LEFT;
             movesCount++;
@@ -191,7 +189,7 @@ void Move() {
                 changeTrail();
             }
             break;
-        case (int)Letters::w:
+        case (unsigned char)Letters::w:
             y = y - 1;
             Moves[movesCount] = Dir::UP;
             movesCount++;
@@ -200,7 +198,7 @@ void Move() {
 
             }
             break;
-        case (int)Letters::d:
+        case (unsigned char)Letters::d:
             x = x + 1;
             Moves[movesCount] = Dir::RIGHT;
             movesCount++;
@@ -208,7 +206,7 @@ void Move() {
                 changeTrail();
             }
             break;
-        case 'û':
+        case (unsigned char)Letters::Russian_s:
             y = y + 1;
             Moves[movesCount] = Dir::DOWN;
             movesCount++;
@@ -216,7 +214,7 @@ void Move() {
                 changeTrail();
             }
             break;
-        case 'ô':
+        case (unsigned char)Letters::Russian_a:
             x = x - 1;
             Moves[movesCount] = Dir::LEFT;
             movesCount++;
@@ -224,7 +222,7 @@ void Move() {
                 changeTrail();
             }
             break;
-        case 'ö':
+        case (unsigned char)Letters::Russian_w:
             y = y - 1;
             Moves[movesCount] = Dir::UP;
             movesCount++;
@@ -233,7 +231,7 @@ void Move() {
 
             }
             break;
-        case 'â':
+        case (unsigned char)Letters::Russian_d:
             x = x + 1;
             Moves[movesCount] = Dir::RIGHT;
             movesCount++;
@@ -267,8 +265,13 @@ void Logic() {
 
 
     if (isFruitEaten) {
-        Fruit_x = rand() % (widht - 2) + 1;
-        Fruit_y = rand() % (height - 2) + 1;
+        while (1) {
+            Fruit_x = rand() % (widht - 2) + 1;
+            Fruit_y = rand() % (height - 2) + 1;
+            if (Trail[Fruit_x][Fruit_y] == 0) {
+                break;
+            }
+        }
         ++score;
         isFruitEaten = false;
     }
@@ -282,13 +285,18 @@ void Logic() {
 }
 
 int main() {
-    setlocale(LC_ALL, "rus");
+    system("pause");
     Start();
     while (!gameOver) {
         if (_kbhit) {
             DrawField();
             Move();
             Logic();
+            if (score == 5) {
+                cout << "You win!!!" << endl;
+                getchar();
+                return 0;
+            }
         }
     }
     delete [] Moves;
