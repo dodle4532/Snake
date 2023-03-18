@@ -7,17 +7,17 @@
 
 using namespace std;
 
-bool delay(int j)
-{
-    j=j*10000000;
-    for (int i = 1; i < j; i++)
-    {
-        if (_kbhit()) {
-            return false;
-        }
-    }
-    return true;
-}
+// bool delay(int j)
+// {
+//     j=j*10000000;
+//     for (int i = 1; i < j; i++)
+//     {
+//         if (_kbhit()) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
 
 bool gameOver;
 const int widht = 26;
@@ -31,6 +31,8 @@ enum class GameMode : int{
     EASY = 49,
     MEDIUM,
     HARD,
+    INSANE,
+    EXTREME_LIGHT,
     EXTREME
 };
 GameMode gamemode;
@@ -69,12 +71,13 @@ enum class Dir {
 Dir* Moves;
 int movesCount;
 
-bool isBorderCrossedX (int x) {
-    if (gamemode == GameMode::EASY && abs(x - prevX) > 1) {
-        return true;
-    }
-    return false;
-}
+// bool isBorderCrossedX (int x) {
+//     if ((gamemode == GameMode::EASY || gamemode == GameMode::INSANE
+//          || gamemode == GameMode::EXTREME_LIGHT) && abs(x - prevX) > 1) {
+//         return true;
+//     }
+//     return false;
+// }
 
 
 vector <int> getLastTrail (int x, int y) {
@@ -233,13 +236,13 @@ void Start () {
             Trail[i][j] = 0;
         }
     }
-    if (gamemode == GameMode::HARD 
-        || gamemode == GameMode::EXTREME) {
-        Moves = new Dir [10000];
+    if (gamemode == GameMode::EASY 
+        || gamemode == GameMode::MEDIUM) {
+        Moves = new Dir [1000];
         return;
     }
     else {
-        Moves = new Dir[1000];
+        Moves = new Dir[10000];
     }
 }
 
@@ -321,13 +324,15 @@ void Logic() {
     if (isBorderCrossed == true) {
         isBorderCrossed == false;
     }
-    if (gamemode != GameMode::EASY) {
+    if (gamemode == GameMode::MEDIUM || gamemode == GameMode::INSANE ||
+        gamemode == GameMode::EXTREME) {
         if (x == 0 || y == 0 || x == widht - 1 || y == height - 1) {
             gameOver = true;
             return;
         }
     }
-    if (gamemode == GameMode::EASY) {
+    if (gamemode == GameMode::EASY || gamemode == GameMode::HARD ||
+        gamemode == GameMode::EXTREME_LIGHT) {
         if (x == 0) {
             x = widht - 2;
             isBorderCrossed = true;
@@ -386,7 +391,9 @@ int main() {
     cout << "1. Easy" << endl;
     cout << "2. Medium" << endl;
     cout << "3. Hard" << endl;
-    cout << "4. Extreme" << endl;
+    cout << "4. Insane" << endl;
+    cout << "5. Extreme(light)" << endl;
+    cout << "6. Extreme" << endl;
     int gm;
     gm = _getch();
     if (gm < (static_cast<int>(GameMode::EASY)) ||
@@ -414,73 +421,90 @@ int main() {
             gamemode = GameMode::EXTREME;
             break;
         }
+        case static_cast<int>(GameMode::EXTREME_LIGHT): {
+            gamemode = GameMode::EXTREME_LIGHT;
+            break;
+        }
+        case static_cast<int>(GameMode::INSANE): {
+            gamemode = GameMode::INSANE;
+            break;
+        }
         
     }
     Start();
-    while (!gameOver) {
-        if (gamemode == GameMode::EASY
-            || gamemode == GameMode::MEDIUM) {
-            if (_kbhit) {
+    unsigned char status;
+    while (1) {
+        while (!gameOver) {
+            if (gamemode == GameMode::EASY
+                || gamemode == GameMode::MEDIUM) {
+                if (_kbhit) {
+                    DrawField();
+                    keyBoard = _getch();
+                    Move(keyBoard);
+                    Logic();
+                }
+            }
+            else if (gamemode == GameMode::HARD || gamemode == GameMode::INSANE) {
+                flag = false;
+                auto start = chrono::steady_clock::now();
                 DrawField();
-                keyBoard = _getch();
+                while (!_kbhit()) {
+                    auto end = chrono::steady_clock::now();
+                    if (chrono::duration_cast<chrono::milliseconds>(end - start).count() > 150) { 
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag == false) {
+                    keyBoard = _getch();
+                }
+                else {
+                    if (Moves[movesCount] == Dir::RIGHT) {
+                        keyBoard = 'd';
+                    }
+                }
                 Move(keyBoard);
                 Logic();
-                if (score == 50) {
-                    cout << "You win!!!" << endl;
-                    getchar();
-                    getchar();
-                    return 0;
-                }
-            }
-        }
-        else if (gamemode == GameMode::HARD) {
-            flag = false;
-            auto start = chrono::steady_clock::now();
-            DrawField();
-            while (!_kbhit()) {
-                auto end = chrono::steady_clock::now();
-                if (chrono::duration_cast<chrono::milliseconds>(end - start).count() > 150) { 
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag == false) {
-                keyBoard = _getch();
             }
             else {
-                if (Moves[movesCount] == Dir::RIGHT) {
-                    keyBoard = 'd';
+                flag = false;
+                auto start = chrono::steady_clock::now();
+                DrawField();
+                while (!_kbhit()) {
+                    auto end = chrono::steady_clock::now();
+                    if (chrono::duration_cast<chrono::milliseconds>(end - start).count() > 70) { 
+                        flag = true;
+                        break;
+                    }
                 }
+                if (flag == false) {
+                    keyBoard = _getch();
+                }
+                else {
+                    if (Moves[movesCount] == Dir::RIGHT) {
+                        keyBoard = 'd';
+                    }
+                }
+                Move(keyBoard);
+                Logic();
             }
-            Move(keyBoard);
-            Logic();
+        }
+        if (score == 50) {
+            cout << "You win!!!" << endl;
+        }
+        if (gameOver == true) {
+            cout << "GAME OVER" << endl;
+        }
+        cout << "Press r to Restart" << endl;
+        status = _getch();
+        if (status == 'r' || status == 170) {
+                Start();
+                continue;
         }
         else {
-            flag = false;
-            auto start = chrono::steady_clock::now();
-            DrawField();
-            while (!_kbhit()) {
-                auto end = chrono::steady_clock::now();
-                if (chrono::duration_cast<chrono::milliseconds>(end - start).count() > 70) { 
-                    flag = true;
-                    break;
-                }
-            }
-            if (flag == false) {
-                keyBoard = _getch();
-            }
-            else {
-                if (Moves[movesCount] == Dir::RIGHT) {
-                    keyBoard = 'd';
-                }
-            }
-            Move(keyBoard);
-            Logic();
+            break;
         }
     }
     delete [] Moves;
-    cout << "GAME OVER" << endl;
-    getchar();
-    getchar();
     return 0;
 }
